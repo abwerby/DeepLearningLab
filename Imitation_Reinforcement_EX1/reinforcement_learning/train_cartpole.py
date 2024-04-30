@@ -66,7 +66,6 @@ def train_online(
     expermints_name = f"RL-Cart_time_{time_}"
     writer = SummaryWriter(tensorboard_dir + "/" + expermints_name)
     
-
     # training
     for i in range(num_episodes):
         stats = run_episode(env, agent, deterministic=False, do_training=True)
