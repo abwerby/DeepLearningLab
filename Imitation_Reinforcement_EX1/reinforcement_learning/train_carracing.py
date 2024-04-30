@@ -50,7 +50,7 @@ def run_episode(
 
         # TODO: get action_id from agent
         # Hint: adapt the probabilities of the 5 actions for random sampling so that the agent explores properly.
-        action_id = agent.act(state, deterministic)
+        action_id = agent.act(state, deterministic, uniform_sampling=False)
         action = id_to_action(action_id)
         
         # Hint: frame skipping might help you to get better results.
@@ -107,15 +107,16 @@ def train_online(
 
     for i in range(num_episodes):
         # Hint: you can keep the episodes short in the beginning by changing max_timesteps (otherwise the car will spend most of the time out of the track)
-        max_timesteps = int(200 * (i / 10 + 1))
+        max_timesteps = int(100 * (i / 10 + 1))
         if max_timesteps > 1000: max_timesteps = 1000
         print("max_timesteps: %d" % max_timesteps)
         stats = run_episode(
             env,
             agent,
+            skip_frames=3,
             history_length=history_length,
             max_timesteps=max_timesteps,
-            rendering=False,
+            rendering=True,
             deterministic=False,
             do_training=True,
         )
@@ -123,8 +124,6 @@ def train_online(
         print("episode: ", i, "reward: ", stats.episode_reward)
         writer.add_scalar('Reward/train', stats.episode_reward, i)
 
-        # TODO: evaluate your agent every 'eval_cycle' episodes using run_episode(env, agent, deterministic=True, do_training=False) to
-        # check its performance with greedy actions only. You can also use tensorboard to plot the mean episode reward.
         eval_cycle = 20
         if i % eval_cycle == 0:
            for j in range(num_eval_episodes):
@@ -154,12 +153,12 @@ if __name__ == "__main__":
 
     # state dimension (4,) and 2 actions
     history_length = 0
-    num_actions = 2
+    num_actions = 5
     
     Q_network = CNN(history_length=history_length, action_dim=num_actions)
     Q_network_target = CNN(history_length=history_length, action_dim=num_actions)
     agent = DQNAgent(Q_network, Q_network_target, num_actions,
-                     epsilon=0.1, gamma=0.99, tau=0.01, lr=0.001, batch_size=256,
+                     epsilon=0.2, gamma=0.99, tau=0.01, lr=0.001, batch_size=256,
                      buffer_size=1e6)
     train_online(
         env, agent, num_episodes=1000, history_length=0, model_dir="./models_carracing"

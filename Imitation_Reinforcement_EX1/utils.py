@@ -1,12 +1,5 @@
 import numpy as np
 
-LEFT = 1
-RIGHT = 2
-STRAIGHT = 0
-ACCELERATE = 3
-BRAKE = 4
-
-
 def clean_labels(y_data):
     """ 
     remove labels with multiple actions
@@ -87,7 +80,7 @@ def convert_labels(y_data):
 
 def convert_actions(out):
     """
-    Converts label to action
+    Converts label probs to action, for imatation learning task
     """
     left = 0 # -> [-1, 0, 0]
     right = 1 # -> [1, 0, 0]
@@ -99,9 +92,9 @@ def convert_actions(out):
     
     # Define mapping between old and new labels
     mapping = {
-        left: [-.5, 0, 0.02],
-        right: [.5, 0, 0.02],
-        acc: [0, 0.8, 0],
+        left: [-1, 0, 0.05],
+        right: [1, 0, 0.05],
+        acc: [0, 1, 0],
         brake: [0, 0, 0.2],
         straight: [0, 0, 0],
     }
@@ -153,6 +146,13 @@ def id_to_action(action_id, max_speed=0.8):
     this method makes actions continous.
     Important: this method only works if you recorded data pressing only one key at a time!
     """
+    
+    LEFT = 0
+    RIGHT = 1
+    ACCELERATE = 2
+    BRAKE = 3
+    STRAIGHT = 4
+
     a = np.array([0.0, 0.0, 0.0])
 
     if action_id == LEFT:

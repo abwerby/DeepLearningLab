@@ -87,7 +87,7 @@ class DQNAgent:
         soft_update(self.Q_target, self.Q, self.tau)
         
         
-    def act(self, state, deterministic):
+    def act(self, state, deterministic, uniform_sampling=True):
         """
         This method creates an epsilon-greedy policy based on the Q-function approximator and epsilon (probability to select a random action)
         Args:
@@ -100,10 +100,14 @@ class DQNAgent:
         if deterministic or r > self.epsilon:
             action_id = self.Q(torch.tensor(state).cuda().float().unsqueeze(0)).argmax().item()
         else:
-            # Hint for the exploration in CarRacing: sampling the action from a uniform distribution will probably not work.
-            # You can sample the agents actions with different probabilities (need to sum up to 1) so that the agent will prefer to accelerate or going straight.
-            # To see how the agent explores, turn the rendering in the training on and look what the agent is doing.
-            action_id = np.random.choice(self.num_actions)
+            if uniform_sampling:
+                action_id = np.random.choice(range(self.num_actions))
+            else:
+                # sample the action with probabilities
+                action_probs = [1, 1, 6, 1, 5]
+                # normalize the probabilities to sum up to 1
+                action_probs = [p / sum(action_probs) for p in action_probs]
+                action_id = np.random.choice(range(self.num_actions), p=action_probs)
         return action_id
 
     def save(self, file_name):
