@@ -21,7 +21,7 @@ class DQNAgent:
         epsilon=0.01,
         tau=0.01,
         lr=1e-4,
-        history_length=100,
+        buffer_size=100,
     ):
         """
         Q-Learning agent for off-policy TD control using Function Approximation.
@@ -36,6 +36,7 @@ class DQNAgent:
            tau: indicates the speed of adjustment of the slowly updated target network.
            epsilon: Chance to sample a random action. Float betwen 0 and 1.
            lr: learning rate of the optimizer
+           buffer_size: size of the replay buffer
         """
         # setup networks
         self.Q = Q.cuda()
@@ -43,7 +44,7 @@ class DQNAgent:
         self.Q_target.load_state_dict(self.Q.state_dict())
 
         # define replay buffer
-        self.replay_buffer = ReplayBuffer(history_length)
+        self.replay_buffer = ReplayBuffer(buffer_size)
 
         # parameters
         self.batch_size = batch_size

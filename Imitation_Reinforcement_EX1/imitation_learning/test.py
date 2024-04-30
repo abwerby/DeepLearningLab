@@ -61,12 +61,12 @@ if __name__ == "__main__":
 
     # important: don't set rendering to False for evaluation (you may get corrupted state images from gym)
     rendering = True
-    history_length = 7
+    history_length = 0
     n_test_episodes = 15  # number of episodes to test
 
     # TODO: load agent
     agent = BCAgent(n_classes=5, history_length=history_length)
-    agent.load("models/agent_e100_7_b128.pt")
+    agent.load("models/agent.pt")
 
     env = gym.make("CarRacing-v0").unwrapped
 

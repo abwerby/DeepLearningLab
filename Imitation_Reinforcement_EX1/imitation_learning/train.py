@@ -4,6 +4,7 @@ import os
 import gzip
 import matplotlib.pyplot as plt
 import torch
+import time 
 
 import sys
 
@@ -11,7 +12,7 @@ sys.path.append(".")
 
 import utils
 from agent.bc_agent import BCAgent
-# from tensorboard_evaluation import Evaluation
+from torch.utils.tensorboard import SummaryWriter
 
 
 def read_data(datasets_dir="./data", frac=0.1):
@@ -19,7 +20,7 @@ def read_data(datasets_dir="./data", frac=0.1):
     This method reads the states and actions recorded in drive_manually.py
     and splits it into training/ validation set.
     """
-    print("... read data")
+    print("[INFO] read data")
     data_file = os.path.join(datasets_dir, "data.pkl.gzip")
 
     f = gzip.open(data_file, "rb")
@@ -53,19 +54,8 @@ def preprocessing(X_train, y_train, X_valid, y_valid, history_length=1):
     :return: preprocessed data (X_train, y_train, X_valid, y_valid)
     """
     
-    print("... preprocess data")
-    # print shapes before preprocessing
-    # print("X_train shape:", X_train.shape)
-    # print("y_train shape:", y_train.shape)
-    # print("X_valid shape:", X_valid.shape)
-    # print("y_valid shape:", y_valid.shape)
-    
-    # use only 1/4 of the data
-    # X_train = X_train[::2]
-    # y_train = y_train[::2]
-    # X_valid = X_valid[::2]
-    # y_valid = y_valid[::2]
-    
+    print("[INFO] preprocess data")
+
     
     # convert to gray scale
     X_train = utils.rgb2gray(X_train)
@@ -129,15 +119,18 @@ def train_model(
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
 
-    print("... train model")
+    print("[INFO] train model")
 
     # define agent
     agent = BCAgent(n_classes=5, history_length=history_length, lr=lr)
-    # tensorboard_eval = Evaluation(tensorboard_dir, "Imitation Learning", ["loss", "val_loss"])
-        
+    time_ = time.strftime("%Y-%m-%d_%H-%M-%S")
+    expermints_name = f"time_{time_}"
+    writer = SummaryWriter(tensorboard_dir + "/" + expermints_name)
+    # write hyperparameters to tensorboard
+    writer.add_hparams({"lr": lr, "batch_size": batch_size, "history_length": history_length}, {})
     # create data loader for training and validation data
     train_dataset = BCDataset(X_train, y_train)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
     print(f'len(train_loader): {len(train_loader)}')
     vaild_dataset = BCDataset(X_valid, y_valid)
     valid_loader = torch.utils.data.DataLoader(vaild_dataset, batch_size=batch_size, shuffle=False)
@@ -151,18 +144,23 @@ def train_model(
         for i, (X_batch, y_batch) in enumerate(train_loader):
             loss = agent.update(X_batch, y_batch)
             acu_train_loss += loss
-            # tensorboard_eval.write_episode_data(epoch * len(train_loader) + i, {"loss": loss.item()})
+            writer.add_scalar('Loss/train_batch', loss.item(), epoch * len(train_loader) + i)
         print(f"Loss: {acu_train_loss/len(train_loader)}")
+        writer.add_scalar('Loss/train', acu_train_loss/len(train_loader), epoch)
         # validate
         for i, (X_batch, y_batch) in enumerate(valid_loader):
             loss = agent.update(X_batch, y_batch)
             acu_val_loss += loss
-            # tensorboard_eval.write_episode_data(epoch * len(valid_loader) + i, {"val_loss": loss.item()})
+            writer.add_scalar('Loss/val_batch', loss.item(), epoch * len(valid_loader) + i)
+        writer.add_scalar('Loss/val', acu_val_loss/len(valid_loader), epoch)
         print(f"Val Loss: {acu_val_loss/len(valid_loader)}")
-
+        
     # save agent weigths
     model_dir = agent.save(os.path.join(model_dir, "agent.pt"))
     print("Model saved in file: %s" % model_dir)
+    # close tensorboard writer
+    writer.flush()
+    writer.close()
 
 
 if __name__ == "__main__":
@@ -170,7 +168,7 @@ if __name__ == "__main__":
     # read data
     X_train, y_train, X_valid, y_valid = read_data("./data")
     # preprocess data
-    history_length = 7
+    history_length = 0
     X_train, y_train, X_valid, y_valid = preprocessing(
         X_train, y_train, X_valid, y_valid, history_length=history_length
     )

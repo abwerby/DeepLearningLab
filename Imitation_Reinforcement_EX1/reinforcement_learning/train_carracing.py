@@ -6,7 +6,8 @@ sys.path.append(".")
 
 import numpy as np
 import gym
-# from tensorboard_evaluation import *
+import time 
+from torch.utils.tensorboard import SummaryWriter
 from utils import EpisodeStats, rgb2gray
 from utils import *
 from agent.dqn_agent import DQNAgent
@@ -96,15 +97,15 @@ def train_online(
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
 
-    print("... train agent")
-    # tensorboard = Evaluation(
-    #     os.path.join(tensorboard_dir, "train"),
-    #     ["episode_reward", "straight", "left", "right", "accel", "brake"],
-    # )
+    print("[INFO] train agent")
+    time_ = time.strftime("%Y-%m-%d_%H-%M-%S")
+    expermints_name = f"RL_time_{time_}"
+    writer = SummaryWriter(tensorboard_dir + "/" + expermints_name)
+    writer.add_hparams({"history_length": history_length}, {})
+    
 
     for i in range(num_episodes):
-        print("epsiode %d" % i)
-
+        print("episode: ", i, "reward: ", stats.episode_reward)
         # Hint: you can keep the episodes short in the beginning by changing max_timesteps (otherwise the car will spend most of the time out of the track)
         max_timesteps = int(10 * (i / 10 + 1))
         print("max_timesteps: %d" % max_timesteps)
@@ -115,18 +116,8 @@ def train_online(
             deterministic=False,
             do_training=True,
         )
-
-        # tensorboard.write_episode_data(
-        #     i,
-        #     eval_dict={
-        #         "episode_reward": stats.episode_reward,
-        #         "straight": stats.get_action_usage(STRAIGHT),
-        #         "left": stats.get_action_usage(LEFT),
-        #         "right": stats.get_action_usage(RIGHT),
-        #         "accel": stats.get_action_usage(ACCELERATE),
-        #         "brake": stats.get_action_usage(BRAKE),
-        #     },
-        # )
+        # write episode data to tensorboard
+        writer.add_scalar('Reward/train', stats.episode_reward, i)
 
         # TODO: evaluate your agent every 'eval_cycle' episodes using run_episode(env, agent, deterministic=True, do_training=False) to
         # check its performance with greedy actions only. You can also use tensorboard to plot the mean episode reward.
@@ -134,21 +125,16 @@ def train_online(
         if i % eval_cycle == 0:
            for j in range(num_eval_episodes):
                 stats = run_episode(env, agent, deterministic=True, do_training=False)
-                # tensorboard.write_episode_data(
-                #     i + j,
-                #     eval_dict={
-                #         "episode_reward": stats.episode_reward,
-                #         "a_0": stats.get_action_usage(0),
-                #         "a_1": stats.get_action_usage(1),
-                #     },
-                # )
+                writer.add_scalar('Reward/eval', stats.episode_reward, i + j)
                 print("eval episode: ", j, "reward: ", stats.episode_reward)
 
         # store model.
         if i % eval_cycle == 0 or (i >= num_episodes - 1):
             agent.saver.save(agent.sess, os.path.join(model_dir, "dqn_agent.ckpt"))
 
-    tensorboard.close_session()
+    env.close()
+    writer.flush()
+    writer.close()
 
 
 def state_preprocessing(state):
