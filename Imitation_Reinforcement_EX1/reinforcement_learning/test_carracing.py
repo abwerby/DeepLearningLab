@@ -18,12 +18,12 @@ if __name__ == "__main__":
     history_length = 0
     num_actions = 5
     
-    Q_network = CNN(history_length=history_length, action_dim=num_actions)
-    Q_network_target = CNN(history_length=history_length, action_dim=num_actions)
+    Q_network = DeepCNN(history_length=history_length, action_dim=num_actions)
+    Q_network_target = DeepCNN(history_length=history_length, action_dim=num_actions)
     agent = DQNAgent(Q_network, Q_network_target, num_actions,
                      epsilon=0.1, gamma=0.95, tau=0.01, lr=0.0001, batch_size=256,
                      buffer_size=int(1e5))
-    agent.load(os.path.join("./models_carracing", "dqn_agent.pt"))
+    agent.load(os.path.join("./models_carracing", "dqn_agent_2.pt"))
 
     n_test_episodes = 15
 

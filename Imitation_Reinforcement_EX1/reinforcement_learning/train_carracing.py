@@ -12,7 +12,7 @@ from torch.utils.tensorboard import SummaryWriter
 from utils import EpisodeStats, rgb2gray
 from utils import *
 from agent.dqn_agent import DQNAgent
-from agent.networks import CNN
+from agent.networks import CNN, DeepCNN
 
 
 def run_episode(
@@ -158,8 +158,8 @@ if __name__ == "__main__":
     history_length = 0
     num_actions = 5
     
-    Q_network = CNN(history_length=history_length, action_dim=num_actions)
-    Q_network_target = CNN(history_length=history_length, action_dim=num_actions)
+    Q_network = DeepCNN(history_length=history_length, action_dim=num_actions)
+    Q_network_target = DeepCNN(history_length=history_length, action_dim=num_actions)
     agent = DQNAgent(Q_network, Q_network_target, num_actions,
                      epsilon=0.1, gamma=0.95, tau=0.01, lr=0.0001, batch_size=256,
                      buffer_size=int(5e3))
