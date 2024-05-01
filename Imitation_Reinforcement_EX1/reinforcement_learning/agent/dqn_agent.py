@@ -68,16 +68,18 @@ class DQNAgent:
         # convert to tensors
         states_tensors = [torch.tensor(state).float() for state in batch_states]
         states_tensor = torch.stack(states_tensors).cuda()
-        actions_tensor = torch.tensor(batch_actions).unsqueeze(1).cuda()
         rewards_tensor = torch.tensor(batch_rewards).unsqueeze(1).cuda()
+        actions_tensor = torch.tensor(batch_actions).unsqueeze(1).cuda()
         next_states_tensors = [torch.tensor(next_state).float() for next_state in batch_next_states]
         next_states_tensor = torch.stack(next_states_tensors).cuda()
-        dones_tensor = torch.tensor(batch_dones).unsqueeze(1).float().cuda()
+        dones_tensor = torch.tensor(batch_dones).unsqueeze(1).cuda().float()
         # compute td targets and loss
         qvalues = self.Q(states_tensor) 
-        next_qvalues = self.Q_target(next_states_tensor)
-        qvalue_selected = qvalues.gather(1, actions_tensor) 
-        expected_qvalues = rewards_tensor + (self.gamma * torch.max(next_qvalues, dim=1, keepdim=True)[0] * (1 - dones_tensor))
+        qvalue_selected = qvalues.gather(1, actions_tensor)
+        optimal_future_qvalues = torch.argmax(self.Q(next_states_tensor), dim=1)
+        q_target_values = self.Q_target(next_states_tensor)
+        q_target_selected = q_target_values.gather(1, optimal_future_qvalues.unsqueeze(1))
+        expected_qvalues = rewards_tensor + self.gamma * q_target_selected * (1 - dones_tensor)
         loss = self.loss_function(qvalue_selected.float(), expected_qvalues.float())
         # optimize the Q network
         self.optimizer.zero_grad()

@@ -105,5 +105,5 @@ if __name__ == "__main__":
                      epsilon=0.1, gamma=0.99, tau=0.01, lr=0.001, batch_size=256,
                      buffer_size=1e6)
     # train agent
-    train_online(env, agent, num_episodes=1000,
+    train_online(env, agent, num_episodes=200,
                  eval_cycle=eval_cycle, num_eval_episodes=num_eval_episodes)
