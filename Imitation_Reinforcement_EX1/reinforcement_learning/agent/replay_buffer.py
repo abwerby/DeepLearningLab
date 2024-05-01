@@ -18,34 +18,23 @@ class ReplayBuffer:
             states=[], actions=[], next_states=[], rewards=[], dones=[]
         )
         self.capacity = capacity
-        self.pos = 0
         
 
     def add_transition(self, state, action, next_state, reward, done):
         """
         This method adds a transition to the replay buffer.
         """
-        if len(self._data.states) < self.capacity:
-            self._data.states.append(state)
-            self._data.actions.append(action)
-            self._data.next_states.append(next_state)
-            self._data.rewards.append(reward)
-            self._data.dones.append(done)
-        else:
-            self._data.states[self.pos] = state
-            self._data.actions[self.pos] = action
-            self._data.next_states[self.pos] = next_state
-            self._data.rewards[self.pos] = reward
-            self._data.dones[self.pos] = done
-            self.pos = (self.pos + 1) % self.capacity
-
-    def size_in_mb(self):
-        """
-        This method returns the size of the replay buffer in MB.
-        """
-        return (
-            4 * len(self._data.states) * self._data.states[0].nbytes / 1024 ** 2
-        )
+        self._data.states.append(state)
+        self._data.actions.append(action)
+        self._data.next_states.append(next_state)
+        self._data.rewards.append(reward)
+        self._data.dones.append(done)
+        if len(self._data.states) > self.capacity:
+            self._data.states.pop(0)
+            self._data.actions.pop(0)
+            self._data.next_states.pop(0)
+            self._data.rewards.pop(0)
+            self._data.dones.pop(0)
 
     def next_batch(self, batch_size):
         """
