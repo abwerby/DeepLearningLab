@@ -163,8 +163,8 @@ if __name__ == "__main__":
     Q_network = CNN(history_length=history_length, action_dim=num_actions)
     Q_network_target = CNN(history_length=history_length, action_dim=num_actions)
     agent = DQNAgent(Q_network, Q_network_target, num_actions,
-                     epsilon=0.1, gamma=0.95, tau=0.01, lr=0.0001, batch_size=512,
-                     buffer_size=1e6)
+                     epsilon=0.1, gamma=0.95, tau=0.01, lr=0.0001, batch_size=256,
+                     buffer_size=int(1e5))
     train_online(
         env, agent, num_episodes=500, history_length=0, model_dir="./models_carracing"
     )

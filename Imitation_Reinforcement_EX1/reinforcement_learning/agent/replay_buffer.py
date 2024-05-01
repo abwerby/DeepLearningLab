@@ -39,6 +39,14 @@ class ReplayBuffer:
             self._data.dones[self.pos] = done
             self.pos = (self.pos + 1) % self.capacity
 
+    def size_in_mb(self):
+        """
+        This method returns the size of the replay buffer in MB.
+        """
+        return (
+            4 * len(self._data.states) * self._data.states[0].nbytes / 1024 ** 2
+        )
+
     def next_batch(self, batch_size):
         """
         This method samples a batch of transitions.
