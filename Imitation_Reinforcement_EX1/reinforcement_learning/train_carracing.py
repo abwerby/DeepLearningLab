@@ -6,6 +6,7 @@ sys.path.append(".")
 
 import numpy as np
 import gym
+import matplotlib.pyplot as plt
 import time 
 from torch.utils.tensorboard import SummaryWriter
 from utils import EpisodeStats, rgb2gray
@@ -44,7 +45,7 @@ def run_episode(
     # append image history to first state
     state = state_preprocessing(state)
     image_hist.extend([state] * (history_length + 1))
-    state = np.array(image_hist).reshape(history_length + 1, 96, 96)
+    state = np.array(image_hist).reshape(history_length + 1, state.shape[0], state.shape[1])
 
     while True:
 
@@ -68,10 +69,10 @@ def run_episode(
         next_state = state_preprocessing(next_state)
         image_hist.append(next_state)
         image_hist.pop(0)
-        next_state = np.array(image_hist).reshape(history_length + 1, 96, 96)
+        next_state = np.array(image_hist).reshape(history_length + 1, next_state.shape[0], next_state.shape[1])
 
         if do_training:
-            state = state.reshape(history_length + 1, 96, 96)
+            state = state.reshape(history_length + 1, state.shape[1], state.shape[2])
             agent.train(state, action_id, next_state, reward, terminal)
 
         stats.step(reward, action_id)
@@ -141,7 +142,11 @@ def train_online(
 
 
 def state_preprocessing(state):
-    return rgb2gray(state).reshape(96, 96) / 255.0
+    img = rgb2gray(state).reshape(96, 96)
+    # crop upper part of the image
+    img = img[:84, 6:90]
+    img = (img - np.mean(img)) / np.std(img)
+    return img
 
 
 if __name__ == "__main__":
@@ -158,8 +163,8 @@ if __name__ == "__main__":
     Q_network = CNN(history_length=history_length, action_dim=num_actions)
     Q_network_target = CNN(history_length=history_length, action_dim=num_actions)
     agent = DQNAgent(Q_network, Q_network_target, num_actions,
-                     epsilon=0.2, gamma=0.99, tau=0.01, lr=0.001, batch_size=256,
+                     epsilon=0.1, gamma=0.95, tau=0.01, lr=0.0001, batch_size=512,
                      buffer_size=1e6)
     train_online(
-        env, agent, num_episodes=1000, history_length=0, model_dir="./models_carracing"
+        env, agent, num_episodes=500, history_length=0, model_dir="./models_carracing"
     )

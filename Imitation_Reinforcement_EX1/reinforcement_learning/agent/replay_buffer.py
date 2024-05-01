@@ -25,7 +25,7 @@ class ReplayBuffer:
         """
         This method adds a transition to the replay buffer.
         """
-        if self.pos >= len(self._data.states):
+        if len(self._data.states) < self.capacity:
             self._data.states.append(state)
             self._data.actions.append(action)
             self._data.next_states.append(next_state)
@@ -37,7 +37,7 @@ class ReplayBuffer:
             self._data.next_states[self.pos] = next_state
             self._data.rewards[self.pos] = reward
             self._data.dones[self.pos] = done
-        self.pos = (self.pos + 1) % self.capacity
+            self.pos = (self.pos + 1) % self.capacity
 
     def next_batch(self, batch_size):
         """

@@ -33,7 +33,7 @@ class CNN(nn.Module):
         self.relu2 = nn.ReLU()
         self.pool2 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         # Fully-connected layers
-        self.fc1 = nn.Linear(64*24*24, 128)
+        self.fc1 = nn.Linear(64*21*21, 128)
         self.relu2 = nn.ReLU()
         self.fc2 = nn.Linear(128, action_dim)
     
