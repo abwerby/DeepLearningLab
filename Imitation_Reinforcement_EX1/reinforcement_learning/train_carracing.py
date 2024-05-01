@@ -48,13 +48,10 @@ def run_episode(
     state = np.array(image_hist).reshape(history_length + 1, state.shape[0], state.shape[1])
 
     while True:
-
-        # TODO: get action_id from agent
-        # Hint: adapt the probabilities of the 5 actions for random sampling so that the agent explores properly.
-        action_id = agent.act(state, deterministic, uniform_sampling=False)
+        # get action id from agent
+        action_id = agent.act(state, deterministic, action_probs=[0.20, 0.20, 0.15, 0.40, 0.05])
         action = id_to_action(action_id)
-        
-        # Hint: frame skipping might help you to get better results.
+        # frame skipping might help you to get better results.
         reward = 0
         for _ in range(skip_frames + 1):
             next_state, r, terminal, info = env.step(action)
@@ -92,6 +89,7 @@ def train_online(
     agent,
     num_episodes,
     history_length=0,
+    skip_frames=0,
     model_dir="./models_carracing",
     tensorboard_dir="./tensorboard",
 ):
@@ -108,13 +106,13 @@ def train_online(
 
     for i in range(num_episodes):
         # Hint: you can keep the episodes short in the beginning by changing max_timesteps (otherwise the car will spend most of the time out of the track)
-        max_timesteps = int(100 * (i / 10 + 1))
+        max_timesteps = int(100 * (i / 5 + 1))
         if max_timesteps > 1000: max_timesteps = 1000
         print("max_timesteps: %d" % max_timesteps)
         stats = run_episode(
             env,
             agent,
-            skip_frames=3,
+            skip_frames=skip_frames,
             history_length=history_length,
             max_timesteps=max_timesteps,
             rendering=True,
@@ -128,7 +126,8 @@ def train_online(
         eval_cycle = 20
         if i % eval_cycle == 0:
            for j in range(num_eval_episodes):
-                stats = run_episode(env, agent, deterministic=True, do_training=False)
+                stats = run_episode(env, agent, skip_frames=skip_frames,
+                                    deterministic=True, do_training=False)
                 writer.add_scalar('Reward/eval', stats.episode_reward, i + j)
                 print("eval episode: ", j, "reward: ", stats.episode_reward)
 
@@ -156,15 +155,16 @@ if __name__ == "__main__":
 
     env = gym.make("CarRacing-v0").unwrapped
 
-    # state dimension (4,) and 2 actions
+    # state dimension (4,) and 5 actions
     history_length = 0
     num_actions = 5
     
     Q_network = CNN(history_length=history_length, action_dim=num_actions)
     Q_network_target = CNN(history_length=history_length, action_dim=num_actions)
     agent = DQNAgent(Q_network, Q_network_target, num_actions,
-                     epsilon=0.1, gamma=0.95, tau=0.01, lr=0.0001, batch_size=256,
-                     buffer_size=int(1e5))
+                     epsilon=0.1, gamma=0.95, tau=0.01, lr=0.001, batch_size=256,
+                     buffer_size=int(1e6))
     train_online(
-        env, agent, num_episodes=500, history_length=0, model_dir="./models_carracing"
+        env, agent, num_episodes=500, skip_frames=5, 
+        history_length=0, model_dir="./models_carracing"
     )

@@ -87,7 +87,7 @@ class DQNAgent:
         soft_update(self.Q_target, self.Q, self.tau)
         
         
-    def act(self, state, deterministic, uniform_sampling=True):
+    def act(self, state, deterministic, action_probs=None):
         """
         This method creates an epsilon-greedy policy based on the Q-function approximator and epsilon (probability to select a random action)
         Args:
@@ -100,11 +100,9 @@ class DQNAgent:
         if deterministic or r > self.epsilon:
             action_id = self.Q(torch.tensor(state).cuda().float().unsqueeze(0)).argmax().item()
         else:
-            if uniform_sampling:
+            if action_probs is None:
                 action_id = np.random.choice(range(self.num_actions))
             else:
-                # sample the action with probabilities
-                action_probs = [1, 1, 6, 1, 5]
                 # normalize the probabilities to sum up to 1
                 action_probs = [p / sum(action_probs) for p in action_probs]
                 action_id = np.random.choice(range(self.num_actions), p=action_probs)
