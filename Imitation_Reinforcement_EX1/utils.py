@@ -26,10 +26,6 @@ def upsample(X_train, y_train):
 
     # Count class occurrences
     unique, counts = np.unique(y_train, axis=0, return_counts=True)
-    print("before balancing")
-    for i in range(len(unique)):
-        print(f"Class {unique[i]}")
-        print(f"Count {counts[i]}")
     
     count_cls = len(y_train) // len(unique)
     
@@ -49,11 +45,7 @@ def upsample(X_train, y_train):
     y_train_new = np.concatenate(y_train_new)
     
     unique, counts = np.unique(y_train_new, axis=0, return_counts=True)
-    # print("after balancing")
-    # for i in range(len(unique)):
-    #     print(f"Class {unique[i]}")
-    #     print(f"Count {counts[i]}")
-    
+
     return X_train_new, y_train_new
 
 def convert_labels(y_data):
@@ -78,7 +70,7 @@ def convert_labels(y_data):
 
     return new_labels
 
-def convert_actions(out):
+def convert_actions(out, max_speed=1.0):
     """
     Converts label probs to action, for imatation learning task
     """
@@ -94,7 +86,7 @@ def convert_actions(out):
     mapping = {
         left: [-1, 0, 0.05],
         right: [1, 0, 0.05],
-        acc: [0, 1, 0],
+        acc: [0, max_speed, 0],
         brake: [0, 0, 0.2],
         straight: [0, 0, 0],
     }
@@ -106,6 +98,10 @@ def rgb2gray(rgb):
     this method converts rgb images to grayscale.
     """
     gray = np.dot(rgb[..., :3], [0.2125, 0.7154, 0.0721])
+    if len(gray.shape) == 3:
+        gray= gray[:, :84, 6:90]
+    else:
+        gray = gray[:84, 6:90]
     return gray.astype("float32")
 
 

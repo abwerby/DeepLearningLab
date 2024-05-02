@@ -1,5 +1,5 @@
 import torch
-from agent.networks import CNN
+from agent.networks import CNN, DeepCNN
 import torch
 
 

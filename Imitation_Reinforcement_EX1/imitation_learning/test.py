@@ -27,27 +27,19 @@ def run_episode(env, agent, rendering=True, history_length=1, max_timesteps=1000
     while True:
 
         # preprocess the state in the same way than in your preprocessing in train_agent.py
-        state = rgb2gray(state)
+        state = rgb2gray(state)/255
         state = (state - state.mean()) / state.std()
         state_queue.append(state)
         input_ = np.array(state_queue)
-        # get the action from your agent! You need to transform the discretized actions to continuous
-        # actions.
-        # hints:
-        #       - the action array fed into env.step() needs to have a shape like np.array([0.0, 0.0, 0.0])
-        #       - just in case your agent misses the first turn because it is too fast: you are allowed to clip the acceleration in test_agent.py
-        #       - you can use the softmax output to calculate the amount of lateral acceleration
         if step > 50:
             a = agent.predict(input_).detach().cpu().numpy()
-            a = convert_actions(a)
-            print("a:", a)
+            a = convert_actions(a, max_speed=1.)
         else:
             a = np.array([0.0, .75, 0.0])
         next_state, r, done, info = env.step(a)
         episode_reward += r
         state = next_state
         step += 1
-        print("step:", step, "reward:", r, "total reward:", episode_reward)
         if rendering:
             env.render()
 
@@ -60,8 +52,8 @@ def run_episode(env, agent, rendering=True, history_length=1, max_timesteps=1000
 if __name__ == "__main__":
 
     # important: don't set rendering to False for evaluation (you may get corrupted state images from gym)
-    rendering = True
-    history_length = 0
+    rendering = False
+    history_length = 7
     n_test_episodes = 15  # number of episodes to test
 
     # TODO: load agent

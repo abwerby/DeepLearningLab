@@ -61,9 +61,13 @@ def preprocessing(X_train, y_train, X_valid, y_valid, history_length=1):
     X_train = utils.rgb2gray(X_train)
     X_valid = utils.rgb2gray(X_valid)
     
-    # standardize
-    X_train = (X_train - np.mean(X_train)) / np.std(X_train)
-    X_valid = (X_valid - np.mean(X_valid)) / np.std(X_valid)
+    # standardize images
+    X_train = (X_train - X_train.mean()) / X_train.std()
+    X_valid = (X_valid - X_valid.mean()) / X_valid.std()
+    
+    # normalize images between 0 and 1
+    # X_train = (X_train - X_train.min()) / (X_train.max() - X_train.min())
+    # X_valid = (X_valid - X_valid.min()) / (X_valid.max() - X_valid.min())
     
     # clean labels
     y_train = utils.clean_labels(y_train)
@@ -124,7 +128,7 @@ def train_model(
     # define agent
     agent = BCAgent(n_classes=5, history_length=history_length, lr=lr)
     time_ = time.strftime("%Y-%m-%d_%H-%M-%S")
-    expermints_name = f"time_{time_}"
+    expermints_name = f"IM-time_{time_}"
     writer = SummaryWriter(tensorboard_dir + "/" + expermints_name)
     # write hyperparameters to tensorboard
     writer.add_hparams({"lr": lr, "batch_size": batch_size, "history_length": history_length}, {})
@@ -168,9 +172,9 @@ if __name__ == "__main__":
     # read data
     X_train, y_train, X_valid, y_valid = read_data("./data")
     # preprocess data
-    history_length = 0
+    history_length = 7
     X_train, y_train, X_valid, y_valid = preprocessing(
         X_train, y_train, X_valid, y_valid, history_length=history_length
     )
     # train model (you can change the parameters!)
-    train_model(X_train, y_train, X_valid, batch_size=128, lr=1e-4, history_length=history_length, epochs=100)
+    train_model(X_train, y_train, X_valid, batch_size=64, lr=1e-4, history_length=history_length, epochs=100)
