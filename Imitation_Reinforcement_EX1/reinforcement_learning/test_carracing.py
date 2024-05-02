@@ -23,7 +23,7 @@ if __name__ == "__main__":
     agent = DQNAgent(Q_network, Q_network_target, num_actions,
                      epsilon=0.1, gamma=0.95, tau=0.01, lr=0.0001, batch_size=256,
                      buffer_size=int(1e5))
-    agent.load(os.path.join("./models_carracing", "dqn_agent_5.pt"))
+    agent.load(os.path.join("./models_carracing", "dqn_agent.pt"))
 
     n_test_episodes = 15
 
