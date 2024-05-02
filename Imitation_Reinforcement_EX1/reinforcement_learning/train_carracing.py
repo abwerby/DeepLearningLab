@@ -8,11 +8,16 @@ import numpy as np
 import gym
 import matplotlib.pyplot as plt
 import time 
+import cv2
 from torch.utils.tensorboard import SummaryWriter
 from utils import EpisodeStats, rgb2gray
 from utils import *
 from agent.dqn_agent import DQNAgent
 from agent.networks import CNN, DeepCNN
+
+
+# global variables
+on_grass_counter = 0
 
 
 def run_episode(
@@ -24,6 +29,7 @@ def run_episode(
     rendering=False,
     max_timesteps=1000,
     history_length=0,
+    min_reward=-30,
 ):
     """
     This methods runs one episode for a gym environment.
@@ -43,13 +49,13 @@ def run_episode(
     env.viewer.window.dispatch_events()
 
     # append image history to first state
-    state = state_preprocessing(state)
+    state, on_grass = state_preprocessing(state)
     image_hist.extend([state] * (history_length + 1))
     state = np.array(image_hist).reshape(history_length + 1, state.shape[0], state.shape[1])
 
     while True:
         # get action id from agent
-        action_id = agent.act(state, deterministic, action_probs=[0.20, 0.20, 0.4, 0.05, 0.15])
+        action_id = agent.act(state, deterministic, action_probs=[0.20, 0.20, 0.4, 0.01, 0.19])
         action = id_to_action(action_id)
         # frame skipping might help you to get better results.
         reward = 0
@@ -63,7 +69,7 @@ def run_episode(
             if terminal:
                 break
 
-        next_state = state_preprocessing(next_state)
+        next_state, on_grass = state_preprocessing(next_state)
         image_hist.append(next_state)
         image_hist.pop(0)
         next_state = np.array(image_hist).reshape(history_length + 1, next_state.shape[0], next_state.shape[1])
@@ -72,10 +78,9 @@ def run_episode(
             agent.train(state, action_id, next_state, reward, terminal)
 
         stats.step(reward, action_id)
-
         state = next_state
 
-        if terminal or (step * (skip_frames + 1)) > max_timesteps:
+        if terminal or (step * (skip_frames + 1)) > max_timesteps or reward < min_reward or on_grass:
             break
 
         step += 1
@@ -139,12 +144,24 @@ def train_online(
     writer.close()
 
 
-def state_preprocessing(state):
-    img = rgb2gray(state).reshape(96, 96)
+def state_preprocessing(state, STEPS_ON_GRASS=20):
+    global on_grass_counter
+    img = rgb2gray(state).reshape(96, 96) / 255.0
     # crop upper part of the image
     img = img[:84, 6:90]
-    img = (img - np.min(img)) / (np.max(img) - np.min(img))
-    return img
+    # check if car is on grass
+    xc = int(img.shape[0] / 2)
+    grass_mask = cv2.inRange(state[67:76 , xc-2:xc+2],
+                             np.array([50, 180, 0]),
+                             np.array([150, 255, 255]))
+    # If on grass for x5 frames or more then trigger True!
+    on_grass_counter = on_grass_counter+1 if np.any(grass_mask==255) and "on_grass_counter" in globals() else 0
+    if on_grass_counter > STEPS_ON_GRASS:
+        on_grass = True
+        on_grass_counter = 0
+    else:
+        on_grass = False
+    return img, on_grass
 
 
 if __name__ == "__main__":
@@ -158,13 +175,13 @@ if __name__ == "__main__":
     history_length = 0
     num_actions = 5
     
-    Q_network = DeepCNN(history_length=history_length, action_dim=num_actions)
-    Q_network_target = DeepCNN(history_length=history_length, action_dim=num_actions)
+    Q_network = CNN(history_length=history_length, action_dim=num_actions)
+    Q_network_target = CNN(history_length=history_length, action_dim=num_actions)
     agent = DQNAgent(Q_network, Q_network_target, num_actions,
-                     epsilon=0.1, gamma=0.99, tau=0.01, lr=0.0001, batch_size=256,
+                     epsilon=0.1, gamma=0.95, tau=0.01, lr=0.001, batch_size=64,
                      buffer_size=int(5e3))
     
     train_online(
-        env, agent, num_episodes=500, skip_frames=3, 
+        env, agent, num_episodes=500, skip_frames=2, 
         history_length=0, model_dir="./models_carracing"
     )

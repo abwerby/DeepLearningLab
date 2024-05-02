@@ -141,7 +141,7 @@ def add_history(X, Y, history_length=1):
         Y_new.append(y)
     return np.array(X_new), np.array(Y_new)
     
-def id_to_action(action_id, max_speed=0.8):
+def id_to_action(action_id, max_speed=1.0):
     """
     this method makes actions continous.
     Important: this method only works if you recorded data pressing only one key at a time!

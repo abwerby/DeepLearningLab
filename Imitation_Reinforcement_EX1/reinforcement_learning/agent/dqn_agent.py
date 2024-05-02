@@ -53,7 +53,7 @@ class DQNAgent:
         self.epsilon = epsilon
 
         self.loss_function = torch.nn.MSELoss()
-        self.optimizer = optim.Adam(self.Q.parameters(), lr=lr)
+        self.optimizer = optim.Adam(self.Q.parameters(), lr=lr, weight_decay=1e-5)
 
         self.num_actions = num_actions
 
@@ -73,6 +73,8 @@ class DQNAgent:
         next_states_tensors = [torch.tensor(next_state).float() for next_state in batch_next_states]
         next_states_tensor = torch.stack(next_states_tensors).cuda()
         dones_tensor = torch.tensor(batch_dones).unsqueeze(1).cuda().float()
+        # clip rewards, to stabilize training
+        rewards_tensor = torch.clamp(rewards_tensor, -10, 1)
         # compute td targets and loss
         qvalues = self.Q(states_tensor) 
         qvalue_selected = qvalues.gather(1, actions_tensor)
