@@ -56,7 +56,7 @@ def run_episode(
     while True:
         # get action id from agent
         action_id = agent.act(state, deterministic, action_probs=[0.20, 0.20, 0.4, 0.01, 0.19])
-        action = id_to_action(action_id)
+        action = id_to_action(action_id, max_speed=1)
         # frame skipping might help you to get better results.
         reward = 0
         for _ in range(skip_frames + 1):
@@ -80,7 +80,9 @@ def run_episode(
         stats.step(reward, action_id)
         state = next_state
 
-        if terminal or (step * (skip_frames + 1)) > max_timesteps or reward < min_reward or on_grass:
+        if do_training and on_grass:
+            break
+        if terminal or (step * (skip_frames + 1)) > max_timesteps or reward < min_reward:
             break
 
         step += 1
@@ -179,7 +181,7 @@ if __name__ == "__main__":
     Q_network_target = CNN(history_length=history_length, action_dim=num_actions)
     agent = DQNAgent(Q_network, Q_network_target, num_actions,
                      epsilon=0.1, gamma=0.95, tau=0.01, lr=0.001, batch_size=64,
-                     buffer_size=int(5e3))
+                     buffer_size=int(1e4))
     
     train_online(
         env, agent, num_episodes=1500, skip_frames=3, 
