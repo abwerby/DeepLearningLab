@@ -33,7 +33,7 @@ def run_episode(env, agent, rendering=True, history_length=1, max_timesteps=1000
         input_ = np.array(state_queue)
         if step > 50:
             a = agent.predict(input_).detach().cpu().numpy()
-            a = convert_actions(a, max_speed=1.)
+            a = convert_actions(a, max_speed=0.8)
         else:
             a = np.array([0.0, .75, 0.0])
         next_state, r, done, info = env.step(a)
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     # TODO: load agent
     agent = BCAgent(n_classes=5, history_length=history_length)
-    agent.load("models/agent.pt")
+    agent.load("models/agent_h7.pt")
 
     env = gym.make("CarRacing-v0").unwrapped
 

@@ -84,8 +84,8 @@ def convert_actions(out, max_speed=1.0):
     
     # Define mapping between old and new labels
     mapping = {
-        left: [-1, 0, 0.05],
-        right: [1, 0, 0.05],
+        left: [-1, 0, 0.02],
+        right: [1, 0, 0.02],
         acc: [0, max_speed, 0],
         brake: [0, 0, 0.2],
         straight: [0, 0, 0],
