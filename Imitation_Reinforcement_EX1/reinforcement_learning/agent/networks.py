@@ -74,7 +74,9 @@ class DeepCNN(nn.Module):
         # Fully-connected layers
         self.fc1 = nn.Linear(256*6*6, 512)
         self.relu5 = nn.ReLU()
-        self.fc2 = nn.Linear(512, action_dim)
+        self.fc2 = nn.Linear(512, 128)
+        self.relu6 = nn.ReLU()
+        self.fc3 = nn.Linear(128, action_dim)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -93,4 +95,6 @@ class DeepCNN(nn.Module):
         x = self.fc1(x)
         x = self.relu5(x)
         x = self.fc2(x)
+        x = self.relu6(x)
+        x = self.fc3(x)
         return x

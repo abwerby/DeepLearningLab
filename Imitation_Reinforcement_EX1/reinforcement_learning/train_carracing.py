@@ -177,11 +177,11 @@ if __name__ == "__main__":
     history_length = 0
     num_actions = 5
     
-    Q_network = CNN(history_length=history_length, action_dim=num_actions)
-    Q_network_target = CNN(history_length=history_length, action_dim=num_actions)
+    Q_network = DeepCNN(history_length=history_length, action_dim=num_actions)
+    Q_network_target = DeepCNN(history_length=history_length, action_dim=num_actions)
     agent = DQNAgent(Q_network, Q_network_target, num_actions,
-                     epsilon=0.1, gamma=0.95, tau=0.01, lr=0.001, batch_size=64,
-                     buffer_size=int(1e4))
+                     epsilon=0.1, gamma=0.95, tau=0.01, lr=0.001, batch_size=20,
+                     buffer_size=int(5e3))
     
     train_online(
         env, agent, num_episodes=1500, skip_frames=3, 
