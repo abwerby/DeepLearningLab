@@ -182,6 +182,6 @@ if __name__ == "__main__":
                      buffer_size=int(5e3))
     
     train_online(
-        env, agent, num_episodes=500, skip_frames=2, 
+        env, agent, num_episodes=1500, skip_frames=3, 
         history_length=0, model_dir="./models_carracing"
     )

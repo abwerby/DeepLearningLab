@@ -23,14 +23,14 @@ if __name__ == "__main__":
     agent = DQNAgent(Q_network, Q_network_target, num_actions,
                      epsilon=0.1, gamma=0.95, tau=0.01, lr=0.0001, batch_size=256,
                      buffer_size=int(1e5))
-    agent.load(os.path.join("./models_carracing", "dqn_agent_1.pt"))
+    agent.load(os.path.join("./models_carracing", "dqn_agent_3.pt"))
 
     n_test_episodes = 15
 
     episode_rewards = []
     for i in range(n_test_episodes):
         stats = run_episode(
-            env, agent,     skip_frames=3, 
+            env, agent,     skip_frames=2, 
             deterministic=True, do_training=False, rendering=False
         )
         episode_rewards.append(stats.episode_reward)
