@@ -65,7 +65,7 @@ class BlipCaption(BlipBase):
         # encode images
         # START TODO #################
         # Pass the image through the visual encoder to get the image embeddings
-
+        image_embeds = self.visual_encoder(image)
         # END TODO ###################
         image_atts = torch.ones(image_embeds.shape[:-1], dtype=torch.long).to(device)
         validate_encoder_outputs(image_embeds, image_atts)
@@ -130,7 +130,12 @@ class BlipCaption(BlipBase):
             # the text decoder is a model of type BertLMHeadModel defined in models/bert/bert.py
             # 2. select only the last token's output from the output logits, these are the logits
             # used for predicting the next token.
-
+            next_token_logits = self.text_decoder(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                encoder_hidden_states=encoder_hidden_states,
+                encoder_attention_mask=encoder_attention_mask,
+            )[:, -1, :]
             # END TODO ###################
             # logits shape (batch_size, current_sequence_len, vocab_size)
             # next_token_logits shape (batch_size, vocab_size)
@@ -144,8 +149,9 @@ class BlipCaption(BlipBase):
             # 2. change the shape of next_tokens from (batch_size,) to (batch_size, 1) by adding
             # a new dimension
             # 3. use torch.cat to combine the current input_ids and the new tokens
-
-
+            next_tokens = next_token_logits.argmax(dim=-1)
+            next_tokens = next_tokens.unsqueeze(-1)
+            input_ids = torch.cat([input_ids, next_tokens], dim=-1)
             # END TODO ###################
 
             # after extending the input_ids, also extend the attention_mask to match
@@ -180,7 +186,12 @@ class BlipCaption(BlipBase):
         while True:
             # START TODO #################
             # same as in function greedy_search above to get the next_token_logits
-
+            next_token_logits = self.text_decoder(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                encoder_hidden_states=encoder_hidden_states,
+                encoder_attention_mask=encoder_attention_mask,
+            )[:, -1, :]
             # END TODO ###################
 
             # enforce minimum length
@@ -192,7 +203,12 @@ class BlipCaption(BlipBase):
             # 2. apply the topk sampling algorithm. useful commands are:
             # torch.topk, F.softmax, torch.multinomial, torch.gather
             # 3. same as above, add the new token to the input_ids
-
+            next_token_logits = next_token_logits / temperature
+            next_token_logits = F.softmax(next_token_logits, dim=-1)
+            next_token_logits, next_token_ind = torch.topk(next_token_logits, topk, dim=-1)
+            next_tokens_logit = torch.multinomial(next_token_logits, 1)
+            next_tokens = torch.gather(next_token_ind, 1, next_tokens_logit)
+            input_ids = torch.cat([input_ids, next_tokens], dim=-1)
             # END TODO ###################
 
             # after extending the input_ids, also extend the attention_mask to match

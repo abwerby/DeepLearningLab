@@ -7,3 +7,8 @@ __pycache__
 tensorboard/
 data/
 ckpt/
+*.pth
+*.log
+*.txt
+*.json
+events.out.tfevents*

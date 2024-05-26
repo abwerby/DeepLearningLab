@@ -141,7 +141,10 @@ def train_epoch(epoch, model, dataloader, optimizer, scheduler, loss_fn, device,
         # and dtype)
         # 3. Compute the image-to-text and text-to-image cross-entropy loss.
         # 4. Compute the final loss as weighted average of the two losses.
-
+        sim = torch.matmul(image_feat, text_feat.T) / temperature
+        sim_t = torch.matmul(text_feat, image_feat.T) / temperature
+        targets = torch.eye(sim.shape[0], device=sim.device, dtype=sim.dtype)
+        loss = (loss_fn(sim, targets) + loss_fn(sim_t, targets)) / 2
         # END TODO ###################
 
         # optimization

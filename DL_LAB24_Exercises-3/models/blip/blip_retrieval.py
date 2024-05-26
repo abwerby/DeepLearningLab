@@ -81,7 +81,10 @@ class BlipRetrieval(BlipBase):
         # 2. Select the CLS token output (the first token in the sequence)
         # 3. Run it through the visual projection layer
         # 4. Normalize it with F.normalize
-
+        image_feat = self.visual_encoder(image)
+        cls_token = image_feat[:, 0]
+        image_feat = self.vision_proj(cls_token)
+        image_feat = F.normalize(image_feat, p=2, dim=1)
         # END TODO ###################
 
         return image_feat
@@ -101,7 +104,9 @@ class BlipRetrieval(BlipBase):
         # 1. Select the CLS token output (the first token in the sequence)
         # 2. Run it through the text projection layer
         # 3. Normalize it with F.normalize
-
+        cls_token = text_embeds[:, 0]
+        text_feat = self.text_proj(cls_token)
+        text_feat = F.normalize(text_feat, p=2, dim=1)
         # END TODO ###################
 
         return text_feat
