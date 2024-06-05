@@ -88,8 +88,8 @@ class GPUProfiler:
         mem_objs = [nvidia_smi.nvmlDeviceGetMemoryInfo(self.gpu_handles[i]) for i in gpu_numbers]
         mem_total = [mem_obj.total / 1024 ** 3 for mem_obj in mem_objs]
         mem_used = [mem_obj.used / 1024 ** 3 for mem_obj in mem_objs]
-        names = [nvidia_smi.nvmlDeviceGetName(self.gpu_handles[i]).decode("utf8") for i in gpu_numbers]
-        # names = [nvidia_smi.nvmlDeviceGetName(self.gpu_handles[i]) for i in gpu_numbers]
+        # names = [nvidia_smi.nvmlDeviceGetName(self.gpu_handles[i]).decode("utf8") for i in gpu_numbers]
+        names = [nvidia_smi.nvmlDeviceGetName(self.gpu_handles[i]) for i in gpu_numbers]
         load_objs = [nvidia_smi.nvmlDeviceGetUtilizationRates(self.gpu_handles[i]) for i in
                      gpu_numbers]
         load_gpu = [load_obj.gpu / 100 for load_obj in load_objs]

@@ -12,3 +12,4 @@ ckpt/
 *.txt
 *.json
 events.out.tfevents*
+*.data/
